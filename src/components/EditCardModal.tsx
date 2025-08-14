@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, Building2, Link, AlertCircle, Sparkles, Wand2, RefreshCw } from 'lucide-react';
+import { X, Upload, Building2, Link, AlertCircle, Sparkles, Wand2, RefreshCw, Key, Bot } from 'lucide-react';
 import { ReviewCard } from '../types';
 import { generateSlug, validateGoogleMapsUrl } from '../utils/helpers';
 import { aiService } from '../utils/aiService';
@@ -22,7 +22,9 @@ export const EditCardModal: React.FC<EditCardModalProps> = ({ card, onClose, onS
     location: card.location || '',
     services: card.services || [],
     logoUrl: card.logoUrl,
-    googleMapsUrl: card.googleMapsUrl
+    googleMapsUrl: card.googleMapsUrl,
+    geminiApiKey: card.geminiApiKey || '',
+    geminiModel: card.geminiModel || 'gemini-2.0-flash'
   });
   
   // AI Review Generation State
@@ -80,6 +82,10 @@ export const EditCardModal: React.FC<EditCardModalProps> = ({ card, onClose, onS
       return;
     }
 
+    if (!formData.geminiApiKey) {
+      setErrors(prev => ({ ...prev, aiReview: 'Please provide Gemini API key first' }));
+      return;
+    }
     setIsGeneratingReview(true);
     setErrors(prev => ({ ...prev, aiReview: '' }));
 
@@ -93,7 +99,9 @@ export const EditCardModal: React.FC<EditCardModalProps> = ({ card, onClose, onS
         starRating: aiReviewData.starRating,
         language: aiReviewData.language,
         tone: aiReviewData.tone,
-        useCase: aiReviewData.useCase
+        useCase: aiReviewData.useCase,
+        geminiApiKey: formData.geminiApiKey,
+        geminiModel: formData.geminiModel
       });
 
       setAiReviewData(prev => ({ ...prev, generatedReview: review.text }));
@@ -111,11 +119,21 @@ export const EditCardModal: React.FC<EditCardModalProps> = ({ card, onClose, onS
       return;
     }
 
+    if (!formData.geminiApiKey) {
+      setErrors(prev => ({ ...prev, tagline: 'Please provide Gemini API key first' }));
+      return;
+    }
     setIsGeneratingTagline(true);
     setErrors(prev => ({ ...prev, tagline: '' }));
 
     try {
-      const tagline = await aiService.generateTagline(formData.businessName, formData.category, formData.type);
+      const tagline = await aiService.generateTagline(
+        formData.businessName, 
+        formData.category, 
+        formData.type,
+        formData.geminiApiKey,
+        formData.geminiModel
+      );
       setAiReviewData(prev => ({ ...prev, generatedTagline: tagline }));
     } catch (error) {
       console.error('Error generating tagline:', error);
@@ -169,6 +187,8 @@ export const EditCardModal: React.FC<EditCardModalProps> = ({ card, onClose, onS
         slug: generateSlug(formData.businessName),
         logoUrl: formData.logoUrl,
         googleMapsUrl: formData.googleMapsUrl.trim(),
+        geminiApiKey: formData.geminiApiKey.trim(),
+        geminiModel: formData.geminiModel,
         updatedAt: new Date().toISOString()
       };
 
@@ -190,6 +210,13 @@ export const EditCardModal: React.FC<EditCardModalProps> = ({ card, onClose, onS
   ];
 
   const toneOptions = ['Friendly', 'Professional', 'Casual', 'Grateful'];
+
+  const modelOptions = [
+    'gemini-2.0-flash',
+    'gemini-1.5-pro',
+    'gemini-1.5-flash',
+    'gemini-1.0-pro'
+  ];
 
   const categoryOptions = [
     'Retail & Shopping',
@@ -333,6 +360,65 @@ export const EditCardModal: React.FC<EditCardModalProps> = ({ card, onClose, onS
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">Optional: Helps with location-specific reviews</p>
+              </div>
+
+              {/* Gemini API Configuration */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Gemini API Key *
+                  </label>
+                  <div className="relative">
+                    <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="password"
+                      value={formData.geminiApiKey}
+                      onChange={(e) => handleInputChange('geminiApiKey', e.target.value)}
+                      placeholder="Enter Gemini API key"
+                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${
+                        errors.geminiApiKey 
+                          ? 'border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500'
+                      }`}
+                    />
+                  </div>
+                  {errors.geminiApiKey && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.geminiApiKey}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Get your API key from{' '}
+                    <a
+                      href="https://makersuite.google.com/app/apikey"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 underline"
+                    >
+                      Google AI Studio
+                    </a>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Gemini Model
+                  </label>
+                  <div className="relative">
+                    <Bot className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <select
+                      value={formData.geminiModel}
+                      onChange={(e) => handleInputChange('geminiModel', e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {modelOptions.map(model => (
+                        <option key={model} value={model}>{model}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Choose the Gemini model for AI generation</p>
+                </div>
               </div>
 
               {/* Business Services */}

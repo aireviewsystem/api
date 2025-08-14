@@ -9,6 +9,8 @@ export interface ReviewCard {
   slug: string;
   logoUrl: string;
   googleMapsUrl: string;
+  geminiApiKey?: string;
+  geminiModel?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -51,7 +51,9 @@ export const CompactReviewCardView: React.FC<CompactReviewCardViewProps> = ({ ca
         starRating: rating,
         language: language || selectedLanguage,
         tone: tone || selectedTone,
-        useCase: 'Customer review'
+        useCase: 'Customer review',
+        geminiApiKey: card.geminiApiKey,
+        geminiModel: card.geminiModel
       });
       setCurrentReview(review.text);
     } catch (error) {
@@ -65,7 +67,9 @@ export const CompactReviewCardView: React.FC<CompactReviewCardViewProps> = ({ ca
         starRating: rating,
         language: language || selectedLanguage,
         tone: tone || selectedTone,
-        useCase: 'Customer review'
+        useCase: 'Customer review',
+        geminiApiKey: card.geminiApiKey,
+        geminiModel: card.geminiModel
       });
       setCurrentReview(fallbackReview);
     } finally {

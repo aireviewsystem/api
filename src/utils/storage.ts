@@ -21,6 +21,8 @@ const transformDbRowToCard = (row: any): ReviewCard => ({
   slug: row.slug,
   logoUrl: row.logo_url || '',
   googleMapsUrl: row.google_maps_url,
+  geminiApiKey: row.gemini_api_key || '',
+  geminiModel: row.gemini_model || 'gemini-2.0-flash',
   createdAt: row.created_at,
   updatedAt: row.updated_at
 });
@@ -37,6 +39,8 @@ const transformCardToDbInsert = (card: ReviewCard) => {
     slug: card.slug,
     logo_url: card.logoUrl || null,
     google_maps_url: card.googleMapsUrl,
+    gemini_api_key: card.geminiApiKey || null,
+    gemini_model: card.geminiModel || 'gemini-2.0-flash',
     created_at: card.createdAt || new Date().toISOString(),
     updated_at: card.updatedAt || new Date().toISOString()
   };
@@ -60,6 +64,8 @@ const transformCardToDbUpdate = (card: ReviewCard) => ({
   slug: card.slug,
   logo_url: card.logoUrl || null,
   google_maps_url: card.googleMapsUrl,
+  gemini_api_key: card.geminiApiKey || null,
+  gemini_model: card.geminiModel || 'gemini-2.0-flash',
   updated_at: new Date().toISOString()
 });
 

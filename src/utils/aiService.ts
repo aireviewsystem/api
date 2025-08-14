@@ -1,9 +1,4 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { config } from './config';
-
-const genAI = config.isGeminiConfigured() 
-  ? new GoogleGenerativeAI(config.ai.geminiApiKey)
-  : null;
 
 export interface ReviewRequest {
   businessName: string;
@@ -15,6 +10,8 @@ export interface ReviewRequest {
   language?: string;
   tone?: 'Professional' | 'Friendly' | 'Casual' | 'Grateful';
   useCase?: 'Customer review' | 'Student feedback' | 'Patient experience';
+  geminiApiKey?: string;
+  geminiModel?: string;
 }
 
 export interface GeneratedReview {
@@ -29,7 +26,16 @@ const usedReviewHashes = new Set<string>();
 
 
 export class AIReviewService {
-  private model = genAI?.getGenerativeModel({ model: 'gemini-2.0-flash' }) || null;
+  private createModel(apiKey: string, modelName: string = 'gemini-2.0-flash') {
+    if (!apiKey) return null;
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      return genAI.getGenerativeModel({ model: modelName });
+    } catch (error) {
+      console.error('Error creating Gemini model:', error);
+      return null;
+    }
+  }
 
   // Generate a simple hash for review content
   private generateHash(content: string): string {
@@ -55,10 +61,14 @@ export class AIReviewService {
   }
 
   async generateReview(request: ReviewRequest, maxRetries: number = 5): Promise<GeneratedReview> {
+    const { geminiApiKey, geminiModel = 'gemini-2.0-flash' } = request;
+    
+    // Create model instance with provided API key
+    const model = this.createModel(geminiApiKey || '', geminiModel);
 
-    // Check if Gemini is configured
-    if (!config.isGeminiConfigured() || !this.model) {
-      console.warn('Gemini API not configured, using fallback review');
+    // Check if model is available
+    if (!model) {
+      console.warn('Gemini API key not provided or invalid, using fallback review');
       return this.getFallbackReview(request);
     }
 
@@ -162,7 +172,7 @@ ${selectedServices && selectedServices.length > 0 ? `- Naturally incorporate the
 - Return only the review text, no quotes, no instructions, no extra formatting, and no introductory sentences.`;
 
       try {
-        const result = await this.model.generateContent(prompt);
+        const result = await model.generateContent(prompt);
         const response = await result.response;
         const reviewText = response.text().trim();
 
@@ -256,7 +266,26 @@ ${selectedServices && selectedServices.length > 0 ? `- Naturally incorporate the
   async generateTagline(businessName: string, category: string, type: string): Promise<string> {
     const prompt = `Generate a catchy, professional tagline for "${businessName}" which is a ${type} in the ${category} category.
 
-Requirements:
+    const model = this.createModel(geminiApiKey || '', geminiModel || 'gemini-2.0-flash');
+    
+    if (!model) {
+      console.warn('Gemini API key not provided, using fallback tagline');
+      // Return fallback tagline
+      const fallbackTaglines: Record<string, string[]> = {
+        'Services': ['Excellence in Every Service', 'Your Service Solution', 'Quality You Can Trust'],
+        'Food & Beverage': ['Taste the Difference', 'Fresh & Delicious Always', 'Where Flavor Meets Quality'],
+        'Health & Medical': ['Your Health, Our Priority', 'Caring for Your Wellness', 'Expert Care Always'],
+        'Education': ['Learning Made Easy', 'Knowledge for Success', 'Education Excellence'],
+        'Professional Businesses': ['Professional Solutions', 'Expert Services', 'Business Excellence']
+      };
+      
+      const categoryTaglines = fallbackTaglines[category] || fallbackTaglines['Services'];
+      return categoryTaglines[Math.floor(Math.random() * categoryTaglines.length)];
+    }
+
+    type: string,
+    geminiApiKey?: string,
+    geminiModel?: string
 - Keep it under 8 words
 - Make it memorable and professional
 - Reflect the business type and category
@@ -267,7 +296,7 @@ Requirements:
 Return only the tagline, no quotes or extra text.`;
 
     try {
-      const result = await this.model.generateContent(prompt);
+      const result = await model.generateContent(prompt);
       const response = await result.response;
       return response.text().trim();
     } catch (error) {
