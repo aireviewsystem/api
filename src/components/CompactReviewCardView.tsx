@@ -17,6 +17,7 @@ export const CompactReviewCardView: React.FC<CompactReviewCardViewProps> = ({ ca
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [selectedTone, setSelectedTone] = useState<'Professional' | 'Friendly' | 'Casual' | 'Grateful'>('Friendly');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedCustomerType, setSelectedCustomerType] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -38,7 +39,8 @@ export const CompactReviewCardView: React.FC<CompactReviewCardViewProps> = ({ ca
     rating: number, 
     language?: string, 
     tone?: 'Professional' | 'Friendly' | 'Casual' | 'Grateful',
-    services?: string[]
+    services?: string[],
+    customerType?: string
   ) => {
     setIsGenerating(true);
     try {
@@ -53,7 +55,8 @@ export const CompactReviewCardView: React.FC<CompactReviewCardViewProps> = ({ ca
         tone: tone || selectedTone,
         useCase: 'Customer review',
         geminiApiKey: card.geminiApiKey,
-        geminiModel: card.geminiModel
+        geminiModel: card.geminiModel,
+        customerType: customerType || selectedCustomerType
       });
       setCurrentReview(review.text);
     } catch (error) {
@@ -79,22 +82,27 @@ export const CompactReviewCardView: React.FC<CompactReviewCardViewProps> = ({ ca
 
   const handleRatingChange = (rating: number) => {
     setSelectedRating(rating);
-    generateReviewForRating(rating, selectedLanguage, selectedTone, selectedServices);
+    generateReviewForRating(rating, selectedLanguage, selectedTone, selectedServices, selectedCustomerType);
   };
 
   const handleLanguageChange = (language: string) => {
     setSelectedLanguage(language);
-    generateReviewForRating(selectedRating, language, selectedTone, selectedServices);
+    generateReviewForRating(selectedRating, language, selectedTone, selectedServices, selectedCustomerType);
   };
 
   const handleToneChange = (tone: 'Professional' | 'Friendly' | 'Casual' | 'Grateful') => {
     setSelectedTone(tone);
-    generateReviewForRating(selectedRating, selectedLanguage, tone, selectedServices);
+    generateReviewForRating(selectedRating, selectedLanguage, tone, selectedServices, selectedCustomerType);
   };
 
   const handleServicesChange = (services: string[]) => {
     setSelectedServices(services);
-    generateReviewForRating(selectedRating, selectedLanguage, selectedTone, services);
+    generateReviewForRating(selectedRating, selectedLanguage, selectedTone, services, selectedCustomerType);
+  };
+
+  const handleCustomerTypeChange = (customerType: string) => {
+    setSelectedCustomerType(customerType);
+    generateReviewForRating(selectedRating, selectedLanguage, selectedTone, selectedServices, customerType);
   };
 
   const handleCopyAndRedirect = async () => {
@@ -109,7 +117,7 @@ export const CompactReviewCardView: React.FC<CompactReviewCardViewProps> = ({ ca
   };
 
   const handleRegenerateReview = () => {
-    generateReviewForRating(selectedRating, selectedLanguage, selectedTone, selectedServices);
+    generateReviewForRating(selectedRating, selectedLanguage, selectedTone, selectedServices, selectedCustomerType);
   };
 
   const renderReviewText = () => {
@@ -213,12 +221,33 @@ export const CompactReviewCardView: React.FC<CompactReviewCardViewProps> = ({ ca
           <div className="grid grid-cols-1 gap-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
-              <SegmentedButtonGroup
-                options={languageOptions}
-                selected={selectedLanguage}
-                onChange={(value) => handleLanguageChange(value as string)}
-                size="sm"
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <SegmentedButtonGroup
+                    options={languageOptions}
+                    selected={selectedLanguage}
+                    onChange={(value) => handleLanguageChange(value as string)}
+                    size="sm"
+                  />
+                </div>
+                
+                {/* Customer Type Selector - Only show if enabled */}
+                {card.enableCustomerTypes && card.customerTypes && card.customerTypes.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Customer Type</label>
+                    <select
+                      value={selectedCustomerType}
+                      onChange={(e) => handleCustomerTypeChange(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    >
+                      <option value="">Select Type</option>
+                      {card.customerTypes.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* {showAdvanced && (
@@ -295,6 +324,12 @@ export const CompactReviewCardView: React.FC<CompactReviewCardViewProps> = ({ ca
                       <div className="flex items-center gap-1">
                         <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                         <span className="font-medium">{selectedServices.length} services</span>
+                      </div>
+                    )}
+                    {selectedCustomerType && (
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                        <span className="font-medium">{selectedCustomerType}</span>
                       </div>
                     )}
                   </div>
