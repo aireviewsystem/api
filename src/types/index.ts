@@ -11,6 +11,8 @@ export interface ReviewCard {
   googleMapsUrl: string;
   geminiApiKey?: string;
   geminiModel?: string;
+  customerTypes?: string[];
+  enableCustomerTypes?: boolean;
   createdAt: string;
   updatedAt: string;
 }

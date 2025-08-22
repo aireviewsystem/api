@@ -79,6 +79,8 @@ export interface Database {
           google_maps_url: string;
           gemini_api_key: string | null;
           gemini_model: string | null;
+          customer_types: string[] | null;
+          enable_customer_types: boolean | null;
           created_at: string;
           updated_at: string;
         };
@@ -95,6 +97,8 @@ export interface Database {
           google_maps_url: string;
           gemini_api_key?: string | null;
           gemini_model?: string | null;
+          customer_types?: string[] | null;
+          enable_customer_types?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -111,6 +115,8 @@ export interface Database {
           google_maps_url?: string;
           gemini_api_key?: string | null;
           gemini_model?: string | null;
+          customer_types?: string[] | null;
+          enable_customer_types?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };

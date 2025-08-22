@@ -6,6 +6,7 @@ import { aiService } from '../utils/aiService';
 import { StarRating } from './StarRating';
 import { SegmentedButtonGroup } from './SegmentedButtonGroup';
 import { TagInput } from './TagInput';
+import { getCustomerTypesForCategory } from '../utils/customerTypes';
 import { Link as LinkIcon } from 'lucide-react';
 
 interface CompactAddCardModalProps {
@@ -24,7 +25,9 @@ export const CompactAddCardModal: React.FC<CompactAddCardModalProps> = ({ onClos
     logoUrl: '',
     googleMapsUrl: '',
     geminiApiKey: '',
-    geminiModel: 'gemini-2.0-flash'
+    geminiModel: 'gemini-2.0-flash',
+    customerTypes: [] as string[],
+    enableCustomerTypes: false
   });
   
   // AI Review Generation State
@@ -53,6 +56,10 @@ export const CompactAddCardModal: React.FC<CompactAddCardModalProps> = ({ onClos
 
   const handleServicesChange = (services: string[]) => {
     setFormData(prev => ({ ...prev, services }));
+  };
+
+  const handleCustomerTypesChange = (customerTypes: string[]) => {
+    setFormData(prev => ({ ...prev, customerTypes }));
   };
 
   const handleAiDataChange = (field: string, value: string | number) => {
@@ -189,6 +196,8 @@ export const CompactAddCardModal: React.FC<CompactAddCardModalProps> = ({ onClos
         googleMapsUrl: formData.googleMapsUrl.trim(),
         geminiApiKey: formData.geminiApiKey.trim(),
         geminiModel: formData.geminiModel,
+        customerTypes: formData.customerTypes,
+        enableCustomerTypes: formData.enableCustomerTypes === 'true' || formData.enableCustomerTypes === true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -289,6 +298,8 @@ export const CompactAddCardModal: React.FC<CompactAddCardModalProps> = ({ onClos
                     onChange={(e) => {
                       handleInputChange('category', e.target.value);
                       handleInputChange('type', '');
+                      // Reset customer types when category changes
+                      setFormData(prev => ({ ...prev, customerTypes: [], enableCustomerTypes: false }));
                     }}
                     className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 ${
                       errors.category 
@@ -377,6 +388,61 @@ export const CompactAddCardModal: React.FC<CompactAddCardModalProps> = ({ onClos
                   Add services that customers can highlight in their reviews
                 </p>
               </div>
+
+              {/* Customer Types Feature */}
+              {formData.category && (
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="enableCustomerTypes"
+                      checked={formData.enableCustomerTypes}
+                      onChange={(e) => handleInputChange('enableCustomerTypes', e.target.checked.toString())}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="enableCustomerTypes" className="ml-2 block text-sm font-medium text-gray-700">
+                      Enable Customer Type Selection
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Allow customers to select their type for personalized reviews
+                  </p>
+
+                  {formData.enableCustomerTypes && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Available Customer Types
+                      </label>
+                      <TagInput
+                        tags={formData.customerTypes}
+                        onChange={handleCustomerTypesChange}
+                        placeholder="Add customer types or use suggested ones"
+                      />
+                      
+                      {/* Suggested Customer Types */}
+                      <div className="mt-3">
+                        <p className="text-xs font-medium text-gray-600 mb-2">Suggested for {formData.category}:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {getCustomerTypesForCategory(formData.category).map((type) => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => {
+                                if (!formData.customerTypes.includes(type)) {
+                                  handleCustomerTypesChange([...formData.customerTypes, type]);
+                                }
+                              }}
+                              className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors duration-200 border border-blue-200"
+                            >
+                              + {type}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Gemini API Configuration */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

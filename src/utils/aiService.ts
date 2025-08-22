@@ -12,6 +12,7 @@ export interface ReviewRequest {
   useCase?: 'Customer review' | 'Student feedback' | 'Patient experience';
   geminiApiKey?: string;
   geminiModel?: string;
+  customerType?: string;
 }
 
 export interface GeneratedReview {
@@ -95,6 +96,17 @@ export class AIReviewService {
     const selectedTone = tone || 'Friendly';
     const selectedUseCase = useCase || 'Customer review';
 
+    // Build customer type specific instructions
+    let customerTypeInstructions = '';
+    if (customerType) {
+      customerTypeInstructions = `
+Customer Type: ${customerType}
+- Write the review from the perspective of a ${customerType.toLowerCase()}
+- Use language and tone appropriate for this customer type
+- Mention experiences and concerns relevant to ${customerType.toLowerCase()}
+- Reflect the typical behavior and expectations of ${customerType.toLowerCase()}`;
+    }
+
     // Build service-specific instructions
     let serviceInstructions = '';
     if (selectedServices && selectedServices.length > 0) {
@@ -139,6 +151,7 @@ Tone: ${selectedTone} - ${toneInstructions[selectedTone]}
 Use Case: ${selectedUseCase} - ${useCaseInstructions[selectedUseCase]}
 ${highlights ? `Customer highlights: ${highlights}` : ''}
 ${serviceInstructions}
+${customerTypeInstructions}
 
 Strict instructions:
 - Review must be between 150 and 200 characters.

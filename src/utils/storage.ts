@@ -23,6 +23,8 @@ const transformDbRowToCard = (row: any): ReviewCard => ({
   googleMapsUrl: row.google_maps_url,
   geminiApiKey: row.gemini_api_key || '',
   geminiModel: row.gemini_model || 'gemini-2.0-flash',
+  customerTypes: row.customer_types || [],
+  enableCustomerTypes: row.enable_customer_types || false,
   createdAt: row.created_at,
   updatedAt: row.updated_at
 });
@@ -41,6 +43,8 @@ const transformCardToDbInsert = (card: ReviewCard) => {
     google_maps_url: card.googleMapsUrl,
     gemini_api_key: card.geminiApiKey || null,
     gemini_model: card.geminiModel || 'gemini-2.0-flash',
+    customer_types: card.customerTypes || null,
+    enable_customer_types: card.enableCustomerTypes || false,
     created_at: card.createdAt || new Date().toISOString(),
     updated_at: card.updatedAt || new Date().toISOString()
   };
@@ -66,6 +70,8 @@ const transformCardToDbUpdate = (card: ReviewCard) => ({
   google_maps_url: card.googleMapsUrl,
   gemini_api_key: card.geminiApiKey || null,
   gemini_model: card.geminiModel || 'gemini-2.0-flash',
+  customer_types: card.customerTypes || null,
+  enable_customer_types: card.enableCustomerTypes || false,
   updated_at: new Date().toISOString()
 });
 
