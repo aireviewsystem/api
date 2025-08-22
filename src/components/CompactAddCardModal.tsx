@@ -8,7 +8,7 @@ import { SegmentedButtonGroup } from './SegmentedButtonGroup';
 import { TagInput } from './TagInput';
 import { Link as LinkIcon } from 'lucide-react';
 
-interface CompactAddCardModalProps {
+interface  {
   onClose: () => void;
   onSave: (card: ReviewCard) => void;
 }
